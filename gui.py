@@ -41,7 +41,9 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-
+            #if event.type == pygame.KEYDOWN:
+            #    if event.key == pygame.K_ESCAPE:
+            #        return
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_click_position = event.pos
 
@@ -53,9 +55,9 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                 if new_board is not None:
                     board = new_board
 
-            if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
-                x, y = [p // grid_size for p in event.pos]
-                board.board[y, x] = (board.board[y, x] + 1 + 2) % 5 - 2  # change figure
+            #if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
+                #x, y = [p // grid_size for p in event.pos]
+                #board.board[y, x] = (board.board[y, x] + 1 + 2) % 5 - 2  # change figure
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
