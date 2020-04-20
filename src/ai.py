@@ -15,9 +15,10 @@ class AI:
         self.depth: int = search_depth
 
     def next_move(self, board: BoardState) -> Optional[BoardState]:
-        moves = board.get_possible_moves()
+        moves = board.get_all_possible_moves()
         if len(moves) == 0:
             return None
+        print(moves)
 
         # todo better implementation
         return max(moves, key=lambda b: self.position_evaluation(b) * b.current_player)

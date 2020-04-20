@@ -1,5 +1,9 @@
 from itertools import product
 
+from typing import Optional
+
+import pickle
+
 import pygame
 from pygame import Surface
 
@@ -33,17 +37,23 @@ def draw_board(screen: Surface, pos_x: int, pos_y: int, elem_size: int, board: B
             negative_color = [255 - e for e in figure_color]
             pygame.draw.circle(screen, negative_color, (position[0] + elem_size // 2, position[1] + elem_size // 2), r)
 
+def save_board(board: BoardState, filename: str):
+    with open(filename, "wb") as fp:
+        pickle.dump(board, fp)
+
+def load_board(filename: str) -> Optional['BoardState']:
+    with open(filename, "rb") as fp:
+        return pickle.load(fp)
 
 def game_loop(screen: Surface, board: BoardState, ai: AI):
     grid_size = screen.get_size()[0] // 8
+    previous_board = board
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-            #if event.type == pygame.KEYDOWN:
-            #    if event.key == pygame.K_ESCAPE:
-            #        return
+
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_click_position = event.pos
 
@@ -53,6 +63,7 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
 
                 new_board = board.do_move(old_x, old_y, new_x, new_y)
                 if new_board is not None:
+                    previous_board = board
                     board = new_board
 
             #if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
@@ -62,13 +73,22 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     board = board.inverted()
-
+                elif event.key == pygame.K_n:
+                    board = board.initial_state()
+                elif event.key == pygame.K_s:
+                    save_board(board, './src/save.bin')
+                elif event.key == pygame.K_l:
+                    board = load_board('./src/save.bin')
+                elif event.key == pygame.K_z:
+                    board = previous_board
                 if event.key == pygame.K_SPACE:
                     new_board = ai.next_move(board)
                     if new_board is not None:
+                        previous_board = board
                         board = new_board
 
         draw_board(screen, 0, 0, grid_size, board)
+
         pygame.display.flip()
 
 
