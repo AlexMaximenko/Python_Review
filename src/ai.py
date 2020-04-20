@@ -6,7 +6,17 @@ from .boardstate import BoardState
 class PositionEvaluation:
     def __call__(self, board: BoardState) -> float:
         #todo
-        return 0
+        evaluation = self.get_opponent_figures_count(board)
+        return -evaluation
+
+    def get_opponent_figures_count(self, board: BoardState):
+        count = 0
+        player = board.current_player * -1
+        for i in board.board:
+            for j in i:
+                if player * j > 0:
+                    count += 1
+        return count
 
 
 class AI:
@@ -19,6 +29,6 @@ class AI:
         if len(moves) == 0:
             return None
         print(moves)
-
+        player = board.current_player
         # todo better implementation
-        return max(moves, key=lambda b: self.position_evaluation(b) * b.current_player)
+        return max(moves, key=lambda b: self.position_evaluation(b))

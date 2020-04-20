@@ -45,10 +45,26 @@ def load_board(filename: str) -> Optional['BoardState']:
     with open(filename, "rb") as fp:
         return pickle.load(fp)
 
+def draw_final_message(screen, player):
+    winners = ''
+    if player == 1:
+        winners = "WHITE "
+    else:
+        winners = "BLACK "
+    message = winners + 'WINS!'
+    font = pygame.font.SysFont('Comic Sans Serif', 64)
+    message_block = pygame.Surface((screen.get_size()[0], 50))
+    message_block.blit(font.render(message, 1, (0, 250, 0)), (120, 3))
+    screen.blit(message_block, (0, 0))
+
+
+
 def game_loop(screen: Surface, board: BoardState, ai: AI):
     grid_size = screen.get_size()[0] // 8
     previous_board = board
-
+    visible_board = board
+    step = 0
+    flag = True
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -64,7 +80,12 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                 new_board = board.do_move(old_x, old_y, new_x, new_y)
                 if new_board is not None:
                     previous_board = board
-                    board = new_board
+                    board = new_board.inverted()
+                    if step % 2 == 0:
+                        visible_board = new_board
+                    else:
+                        visible_board = board
+                    step += 1
 
             #if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
                 #x, y = [p // grid_size for p in event.pos]
@@ -76,23 +97,34 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                 elif event.key == pygame.K_n:
                     board = board.initial_state()
                 elif event.key == pygame.K_s:
-                    save_board(board, './src/save.bin')
+                    save_board(visible_board, './src/save.bin')
                 elif event.key == pygame.K_l:
                     board = load_board('./src/save.bin')
+                    visible_board = board
                 elif event.key == pygame.K_z:
                     board = previous_board
                 if event.key == pygame.K_SPACE:
                     new_board = ai.next_move(board)
                     if new_board is not None:
                         previous_board = board
-                        board = new_board
+                        board = new_board.inverted()
+                        if step % 2 == 0:
+                            visible_board = new_board
+                        else:
+                            visible_board = board
+                        step += 1
 
-        draw_board(screen, 0, 0, grid_size, board)
+        draw_board(screen, 0, 0, grid_size, visible_board)
+        if board.get_winner != 0:
+            draw_final_message(screen, board.get_winner)
 
+            print("GG")
         pygame.display.flip()
 
-
+pygame.font.init()
 pygame.init()
+
+pygame.display.set_caption('Russian Checkers')
 
 screen: Surface = pygame.display.set_mode([512, 512])
 ai = AI(PositionEvaluation(), search_depth=4)

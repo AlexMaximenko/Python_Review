@@ -18,7 +18,56 @@ class BoardState:
     def copy(self) -> 'BoardState':
         return BoardState(self.board.copy(), self.current_player)
 
-    def get_all_possible_moves(self) -> List['Move']:
+    def get_possible_moves(self, from_x, from_y):
+        moves = []
+        if self.current_player * self.board[from_y, from_x] <= 0:
+            return([])
+        if abs(self.board[from_y, from_x]) == 1:
+            moves = self.get_possible_moves_for_ordinary(from_x, from_y)
+        else:
+            moves = self.get_possible_moves_for_queen(from_x, from_y)
+        if len(moves) == 0:
+            return([])
+        #print("MOVES from x = {}, from y = {}".format(x, y))
+        #print(moves)
+        i = 0
+        while True:
+            correct_next_moves = []
+            current_move = moves[i]
+
+            if current_move.is_attack:
+                if current_move.is_queen:
+                    next_moves = self.get_possible_moves_for_queen(current_move.visited_cells[-1][0], current_move.visited_cells[-1][1])
+                else:
+                    next_moves = self.get_possible_moves_for_ordinary(current_move.visited_cells[-1][0], current_move.visited_cells[-1][1])
+                correct_next_moves = []
+
+                for j in np.arange(0, len(next_moves)):
+                    if next_moves[j].is_attack and not next_moves[j].beaten_cells[-1] in current_move.beaten_cells:
+                        next_moves[j].beaten_cells = current_move.beaten_cells + next_moves[j].beaten_cells
+                        next_moves[j].visited_cells = current_move.visited_cells + next_moves[j].visited_cells
+                        next_moves[j].is_queen = next_moves[j].is_queen or current_move.is_queen
+                        correct_next_moves.append(next_moves[j])
+                del(next_moves)
+
+            if len(correct_next_moves) == 0:
+                i += 1
+                if i == len(moves):
+                    break;
+                continue
+
+            #print("CORRECT NEXT MOVES : ", correct_next_moves)
+            #print("MOVES_TO_APPEND : ", moves)
+            #print("CURRENT MOVE : ", current_move)
+
+            del(moves[i])
+            moves.extend(correct_next_moves)
+
+            if i == len(moves):
+                break;
+        return(moves)
+
+    def get_all_possible_moves(self) -> List['BoardState']:
         """
         :return: list of BoardStates with  all possible moves
         """
@@ -26,58 +75,9 @@ class BoardState:
 
         for y in np.arange(0, 8):
             for x in np.arange(0, 8):
-                moves = []
-                if self.current_player * self.board[y, x] <= 0:
-                    continue
-                if abs(self.board[y, x]) == 1:
-                    moves = self.get_possible_moves_for_ordinary(x, y)
-                else:
-                    moves = self.get_possible_moves_for_queen(x, y)
-                if len(moves) == 0:
-                    continue
-                #print("MOVES from x = {}, from y = {}".format(x, y))
-                #print(moves)
-                i = 0
-                while True:
-                    correct_next_moves = []
-                    current_move = moves[i]
-
-                    if current_move.is_attack:
-                        if current_move.is_queen:
-                            next_moves = self.get_possible_moves_for_queen(current_move.visited_cells[-1][0], current_move.visited_cells[-1][1])
-                        else:
-                            next_moves = self.get_possible_moves_for_ordinary(current_move.visited_cells[-1][0], current_move.visited_cells[-1][1])
-                        correct_next_moves = []
-
-                        for j in np.arange(0, len(next_moves)):
-                            if next_moves[j].is_attack and not next_moves[j].beaten_cells[-1] in current_move.beaten_cells:
-                                next_moves[j].beaten_cells = current_move.beaten_cells + next_moves[j].beaten_cells
-                                next_moves[j].visited_cells = current_move.visited_cells + next_moves[j].visited_cells
-                                next_moves[j].is_queen = next_moves[j].is_queen or current_move.is_queen
-                                correct_next_moves.append(next_moves[j])
-                        del(next_moves)
-
-                    if len(correct_next_moves) == 0:
-                        i += 1
-                        if i == len(moves):
-                            break;
-                        continue
-
-                    #print("CORRECT NEXT MOVES : ", correct_next_moves)
-                    #print("MOVES_TO_APPEND : ", moves)
-                    #print("CURRENT MOVE : ", current_move)
-
-                    moves[i] = Move(-1, -1)
-                    moves.extend(correct_next_moves)
-
-                    i += 1
-                    if i == len(moves):
-                        break;
-                #print("WHILE ENDED")
-                #print('MOVES AFTER WHILE:', moves)
+                moves = self.get_possible_moves(x, y)
                 for move in moves:
-                    if move != Move(-1, -1):
-                        boards.append(self.do_correct_move(x, y, move))
+                    boards.append(self.do_correct_move(x, y, move))
 
         #print("RETURNN")
         return boards
@@ -98,7 +98,7 @@ class BoardState:
             result.board[move.visited_cells[-1][1], move.visited_cells[-1][0]] *= 2
 
         result.board[from_y, from_x] = 0
-
+        #result.current_player *= -1
         return result
 
     def do_move(self, from_x, from_y, to_x, to_y) -> Optional['BoardState']:
@@ -108,12 +108,8 @@ class BoardState:
 
         if self.current_player * self.board[from_y, from_x] <= 0:
             return None
-        possible_moves = []
+        possible_moves = self.get_possible_moves(from_x, from_y)
         current_move = Move()
-        if abs(self.board[from_y, from_x]) == 1:
-            possible_moves = self.get_possible_moves_for_ordinary(from_x, from_y)
-        else:
-            possible_moves = self.get_possible_moves_for_queen(from_x, from_y)
 
         for move in possible_moves:
             if Move(to_x, to_y, False) == move:
@@ -186,7 +182,19 @@ class BoardState:
 
     @property
     def get_winner(self) -> Optional[int]:
-        ... # todo
+        if self.get_figures_count(self.current_player) == 0:
+            return -1 * self.current_player
+        if len(self.get_all_possible_moves()) == 0:
+            return -1 * self.current_player
+        return 0
+
+    def get_figures_count(self, player: int):
+        count = 0
+        for i in self.board:
+            for j in i:
+                if player * j > 0:
+                    count += 1
+        return count
 
     def is_in_board(self, x, y) -> bool:
         size = self.board.shape[0] - 1
@@ -200,12 +208,10 @@ class BoardState:
         for x in x_places:
             if x % 2 == 0:
                 board[7, x] = 1
-                #board[5, x] = 1
+                board[5, x] = 1
                 board[1, x] = -1
             else:
                 board[0, x] = -1
-                #board[2, x] = -1
+                board[2, x] = -1
                 board[6, x] = 1
-            board[1, 0] = 0
-            board[0, 1] = 0
         return BoardState(board, 1)
