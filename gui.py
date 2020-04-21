@@ -94,13 +94,18 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     board = board.inverted()
+                    visible_board = board
+                    step = 0
                 elif event.key == pygame.K_n:
                     board = board.initial_state()
+                    visible_board = board
+                    step = 0
                 elif event.key == pygame.K_s:
                     save_board(visible_board, './src/save.bin')
                 elif event.key == pygame.K_l:
                     board = load_board('./src/save.bin')
                     visible_board = board
+                    step = 0
                 elif event.key == pygame.K_z:
                     board = previous_board
                 if event.key == pygame.K_SPACE:
@@ -127,7 +132,7 @@ pygame.init()
 pygame.display.set_caption('Russian Checkers')
 
 screen: Surface = pygame.display.set_mode([512, 512])
-ai = AI(PositionEvaluation(), search_depth=4)
+ai = AI(PositionEvaluation(), search_depth=1)
 
 game_loop(screen, BoardState.initial_state(), ai)
 

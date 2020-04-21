@@ -8,12 +8,28 @@ from .move import Move
 
 
 class BoardState:
-    def __init__(self, board: np.ndarray, current_player: int = 1):
+    def __init__(
+            self,
+            board: np.ndarray,
+            current_player: int = 1,
+            player_checks: int = 12,
+            opponent_checks: int = 12,
+            player_queens: int = 0,
+            opponent_queens: int = 0):
         self.board: np.ndarray = board
         self.current_player: int = current_player
+        self.player_checks = player_checks
+        self.opponent_checks = 12
+        self.player_queens = player_queens
+        self.opponent_queens = opponent_queens
 
     def inverted(self) -> 'BoardState':
-        return BoardState(board=self.board[::-1, ::-1], current_player=self.current_player * -1)
+        return BoardState(self.board[::-1, ::-1],
+                          self.current_player * -1,
+                          self.opponent_checks,
+                          self.player_checks,
+                          self.opponent_queens,
+                          self.player_queens)
 
     def copy(self) -> 'BoardState':
         return BoardState(self.board.copy(), self.current_player)
@@ -37,9 +53,13 @@ class BoardState:
 
             if current_move.is_attack:
                 if current_move.is_queen:
-                    next_moves = self.get_possible_moves_for_queen(current_move.visited_cells[-1][0], current_move.visited_cells[-1][1])
+                    next_moves = self.get_possible_moves_for_queen(
+                        current_move.visited_cells[-1][0],
+                        current_move.visited_cells[-1][1])
                 else:
-                    next_moves = self.get_possible_moves_for_ordinary(current_move.visited_cells[-1][0], current_move.visited_cells[-1][1])
+                    next_moves = self.get_possible_moves_for_ordinary(
+                        current_move.visited_cells[-1][0],
+                        current_move.visited_cells[-1][1])
                 correct_next_moves = []
 
                 for j in np.arange(0, len(next_moves)):
@@ -89,13 +109,21 @@ class BoardState:
         #print("DO CORRECT MOVE from x = {}, y = {}, ".format(from_x, from_y), move)
         result = self.copy()
         was_queen = move.is_queen
+        if abs(result.board[from_x, from_y]) != 2 and was_queen:
+            result.player_checks -= 1
+            result.player_queens += 1
 
         for cell in move.beaten_cells:
+            result.opponent_checks -= abs(result.board[cell[1], cell[0]])
             result.board[cell[1], cell[0]] = 0
 
-        result.board[move.visited_cells[-1][1], move.visited_cells[-1][0]] = result.board[from_y, from_x]
+        result.board[
+            move.visited_cells[-1][1],
+            move.visited_cells[-1][0]] = result.board[from_y, from_x]
         if was_queen and abs(result.board[from_y, from_x]) == 1:
-            result.board[move.visited_cells[-1][1], move.visited_cells[-1][0]] *= 2
+            result.board[
+            move.visited_cells[-1][1],
+            move.visited_cells[-1][0]] *= 2
 
         result.board[from_y, from_x] = 0
         #result.current_player *= -1
@@ -123,17 +151,22 @@ class BoardState:
 
         return self.do_correct_move(from_x, from_y, current_move)
 
-    def get_possible_moves_for_ordinary(self, from_x, from_y) -> List['Move']: # moves with only one attack
+    def get_possible_moves_for_ordinary(self, from_x, from_y) -> List['Move']:
         moves = []
         for y in [from_y - 1, from_y + 1]:
             for  x in [from_x - 1, from_x + 1]:
-                if self.is_in_board(x, y): #check is in board
-                    if self.board[y, x] == 0 and y == from_y - 1: #check is empty
+                if self.is_in_board(x, y):
+                    if self.board[y, x] == 0 and y == from_y - 1:
                         moves.append(Move(x, y, False, is_queen = (y == 0)))
-                    if self.board[y, x] * self.current_player < 0: # if the opponent is on the square
-                        next_y, next_x = 2 * y - from_y, 2 * x - from_x # after attack coordinate
-                        if self.is_in_board(next_x, next_y) and self.board[next_y, next_x] == 0:
-                            moves.append(Move(next_x, next_y, True, x, y, is_queen = (next_y == 0)))
+                    if self.board[y, x] * self.current_player < 0:
+                        next_y, next_x = 2 * y - from_y, 2 * x - from_x
+                        if (self.is_in_board(next_x, next_y) and
+                                self.board[next_y, next_x] == 0):
+                            moves.append(
+                                Move(next_x,
+                                     next_y,
+                                     True, x, y,
+                                     is_queen = (next_y == 0)))
         return moves
 
     def get_possible_moves_for_queen(self, from_x, from_y) -> List['Move']:
@@ -148,8 +181,16 @@ class BoardState:
                 to_y += y_direction
                 if not self.is_in_board(to_x, to_y):
                     break
+
                 if self.board[to_y, to_x] == 0:
-                    moves.append(Move(to_x, to_y, was_attack, beaten_cell_x, beaten_cell_y, is_queen = True))
+                    moves.append(
+                        Move(to_x,
+                             to_y,
+                             was_attack,
+                             beaten_cell_x,
+                             beaten_cell_y,
+                             is_queen = True))
+
                 if self.board[to_y, to_x] * self.current_player < 0:
                     if not was_attack:
                         was_attack = True
@@ -157,6 +198,7 @@ class BoardState:
                         beaten_cell_y = to_y
                     else:
                         break
+
                 if self.board[to_y, to_x] * self.current_player > 0:
                     break
 
