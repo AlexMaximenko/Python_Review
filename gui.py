@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 from itertools import product
 
 from typing import Optional
@@ -40,6 +43,7 @@ def draw_board(screen: Surface, pos_x: int, pos_y: int, elem_size: int, board: B
 def save_board(board: BoardState, filename: str):
     with open(filename, "wb") as fp:
         pickle.dump(board, fp)
+
 
 def load_board(filename: str) -> Optional['BoardState']:
     with open(filename, "rb") as fp:
@@ -93,22 +97,38 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    board = board.inverted()
-                    visible_board = board
-                    step = 0
+                    visible_board = visible_board.inverted()
                 elif event.key == pygame.K_n:
                     board = board.initial_state()
                     visible_board = board
                     step = 0
                 elif event.key == pygame.K_s:
-                    save_board(visible_board, './src/save.bin')
+                    save_board(board, './src/save_board.bin')
+                    save_board(visible_board, './src/save_visible.bin')
                 elif event.key == pygame.K_l:
-                    board = load_board('./src/save.bin')
-                    visible_board = board
-                    step = 0
+                    board = load_board('./src/save_board.bin')
+                    visible_board = load_board('./src/save_visible.bin')
+                    if board.current_player == visible_board.current_player:
+                        step = 0
+                    else:
+                        step = 1
+                elif event.key == pygame.K_1:
+                    board = load_board('./src/test_boards/test_board_1_visible')
+                    visible_board = load_board('./src/test_boards/test_board_1_board')
+                    if board.current_player == visible_board.current_player:
+                        step = 0
+                    else:
+                        step = 1
+                elif event.key == pygame.K_2:
+                    board = load_board('./src/test_boards/test_board_2_visible')
+                    visible_board = load_board('./src/test_boards/test_board_2_board')
+                    if board.current_player == visible_board.current_player:
+                        step = 0
+                    else:
+                        step = 1
                 elif event.key == pygame.K_z:
                     board = previous_board
-                if event.key == pygame.K_SPACE:
+                elif event.key == pygame.K_SPACE:
                     new_board = ai.next_move(board)
                     if new_board is not None:
                         previous_board = board
@@ -123,7 +143,6 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
         if board.get_winner != 0:
             draw_final_message(screen, board.get_winner)
 
-            print("GG")
         pygame.display.flip()
 
 pygame.font.init()
@@ -132,7 +151,7 @@ pygame.init()
 pygame.display.set_caption('Russian Checkers')
 
 screen: Surface = pygame.display.set_mode([512, 512])
-ai = AI(PositionEvaluation(), search_depth=1)
+ai = AI(PositionEvaluation(), search_depth=4)
 
 game_loop(screen, BoardState.initial_state(), ai)
 

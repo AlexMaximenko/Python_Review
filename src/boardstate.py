@@ -19,7 +19,7 @@ class BoardState:
         self.board: np.ndarray = board
         self.current_player: int = current_player
         self.player_checks = player_checks
-        self.opponent_checks = 12
+        self.opponent_checks = opponent_checks
         self.player_queens = player_queens
         self.opponent_queens = opponent_queens
 
@@ -32,7 +32,12 @@ class BoardState:
                           self.player_queens)
 
     def copy(self) -> 'BoardState':
-        return BoardState(self.board.copy(), self.current_player)
+        return BoardState(self.board.copy(),
+                          self.current_player,
+                          self.player_checks,
+                          self.opponent_checks,
+                          self.player_queens,
+                          self.opponent_queens)
 
     def get_possible_moves(self, from_x, from_y):
         moves = []
@@ -212,11 +217,19 @@ class BoardState:
         state = {}
         state["board"] = self.board
         state["current_player"] = self.current_player
+        state["player_checks"] = self.player_checks
+        state["opponent_checks"] = self.opponent_checks
+        state["player_queens"] = self.player_queens
+        state["opponent_queens"] = self.opponent_queens
         return state
 
     def __setstate__(self, state: dict):
         self.board = state["board"]
         self.current_player = state["current_player"]
+        self.player_checks = state['player_checks']
+        self.opponent_checks = state['opponent_checks']
+        self.player_queens = state['player_queens']
+        self.opponent_queens = state['opponent_queens']
 
     @property
     def is_game_finished(self) -> bool:
@@ -254,6 +267,6 @@ class BoardState:
                 board[1, x] = -1
             else:
                 board[0, x] = -1
-                board[2, x] = -1
                 board[6, x] = 1
+
         return BoardState(board, 1)
