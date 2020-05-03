@@ -245,9 +245,9 @@ class BoardState:
 
     def get_figures_count(self, player: int):
         count = 0
-        for i in self.board:
-            for j in i:
-                if player * j > 0:
+        for row in self.board:
+            for cell in row:
+                if player * cell > 0:
                     count += 1
         return count
 
@@ -268,5 +268,6 @@ class BoardState:
             else:
                 board[0, x] = -1
                 board[6, x] = 1
+                board[2, x] = -1
 
         return BoardState(board, 1)

@@ -45,7 +45,7 @@ def save_board(board: BoardState, filename: str):
         pickle.dump(board, fp)
 
 
-def load_board(filename: str) -> Optional['BoardState']:
+def load_board(filename: str) -> 'BoardState':
     with open(filename, "rb") as fp:
         return pickle.load(fp)
 
