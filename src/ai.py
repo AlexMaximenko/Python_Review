@@ -63,11 +63,11 @@ class AI:
 
     def next_move(self, board: BoardState) -> Optional[BoardState]:
         moves = board.get_all_possible_moves()
-        print("-------------------")
+        #print("-------------------")
         if len(moves) == 0:
             return None
-        print(moves)
-        print("-------------------")
+        #print(moves)
+        #print("-------------------")
 
         self.player = board.current_player
         # todo better implementation
@@ -75,7 +75,7 @@ class AI:
         best = 0
         for i in range(len(moves)):
             curr_value = self.get_min_max(moves[i], 0, beta = max)
-            print("CURR_VALUE = ", curr_value)
+            #print("CURR_VALUE = ", curr_value)
             if curr_value > max:
                 max = curr_value
                 beta = max
