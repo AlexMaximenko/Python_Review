@@ -90,6 +90,8 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                     else:
                         visible_board = board
                     step += 1
+                if board.get_winner != 0:
+                    flag = False
 
             #if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
                 #x, y = [p // grid_size for p in event.pos]
@@ -108,6 +110,7 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                 elif event.key == pygame.K_l:
                     board = load_board('./src/save_board.bin')
                     visible_board = load_board('./src/save_visible.bin')
+                    flag = True
                     if board.current_player == visible_board.current_player:
                         step = 0
                     else:
@@ -115,6 +118,7 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                 elif event.key == pygame.K_1:
                     board = load_board('./src/test_boards/test_board_1_visible')
                     visible_board = load_board('./src/test_boards/test_board_1_board')
+                    flag = True
                     if board.current_player == visible_board.current_player:
                         step = 0
                     else:
@@ -122,6 +126,7 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                 elif event.key == pygame.K_2:
                     board = load_board('./src/test_boards/test_board_2_visible')
                     visible_board = load_board('./src/test_boards/test_board_2_board')
+                    flag = True
                     if board.current_player == visible_board.current_player:
                         step = 0
                     else:
@@ -138,9 +143,11 @@ def game_loop(screen: Surface, board: BoardState, ai: AI):
                         else:
                             visible_board = board
                         step += 1
+                    if board.get_winner != 0:
+                        flag = False
 
         draw_board(screen, 0, 0, grid_size, visible_board)
-        if board.get_winner != 0:
+        if not flag:
             draw_final_message(screen, board.get_winner)
 
         pygame.display.flip()

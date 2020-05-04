@@ -219,6 +219,7 @@ class BoardState:
                              is_queen = True))
 
                 if was_attack and self.board[to_y, to_x] == 0:
+                    is_attack = True
                     moves_with_attack.append(
                         Move(to_x,
                              to_y,
@@ -230,7 +231,6 @@ class BoardState:
                 if self.board[to_y, to_x] * self.current_player < 0:
                     if not was_attack:
                         was_attack = True
-                        is_attack = True
                         beaten_cell_x = to_x
                         beaten_cell_y = to_y
                     else:
@@ -271,8 +271,10 @@ class BoardState:
     @property
     def get_winner(self) -> Optional[int]:
         if self.get_figures_count(self.current_player) == 0:
+            print('gg_count')
             return -1 * self.current_player
         if len(self.get_all_possible_moves()) == 0:
+            print('gg_moves')
             return -1 * self.current_player
         return 0
 

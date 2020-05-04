@@ -75,7 +75,7 @@ class AI:
         best = 0
         for i in range(len(moves)):
             curr_value = self.get_min_max(moves[i], 0, beta = max)
-            #print("CURR_VALUE = ", curr_value)
+            print("CURR_VALUE = ", curr_value)
             if curr_value > max:
                 max = curr_value
                 beta = max
